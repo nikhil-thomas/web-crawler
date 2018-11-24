@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/nikhil-thomas/web-crawler/internal/crawlers"
 	"golang.org/x/net/html"
 )
 
@@ -29,7 +30,7 @@ func (f *Fetcher) ExtractURLs(url string) ([]string, error) {
 	defer resp.Body.Close()
 
 	if !isHTML(resp) {
-		return nil, fmt.Errorf("http fetcher: link is not html page")
+		return nil, crawlers.ErrPageNotHTML
 	}
 
 	rootNode, err := html.Parse(resp.Body)

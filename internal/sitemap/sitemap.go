@@ -2,11 +2,12 @@ package sitemap
 
 import (
 	"fmt"
+	"log"
 )
 
 // Crawler interface defines the behavior of a Crawler
 type Crawler interface {
-	Crawl(url string, root string) ([]string, error)
+	Crawl(url string, pageLimit, linksPerPage int) (map[string]Children, error)
 }
 
 // Children defines a list of children links in a html page
@@ -30,7 +31,7 @@ func NewSiteManager(url string, depth int, crawler Crawler) *SiteMapManager {
 		Sitemap:      map[string]Children{},
 		urlQueue:     []string{url},
 		crawler:      crawler,
-		pageLimit:    100,
+		pageLimit:    50,
 		linksPerPage: 2,
 	}
 }
@@ -38,29 +39,10 @@ func NewSiteManager(url string, depth int, crawler Crawler) *SiteMapManager {
 // Crawl crawls a site starting from specified root url
 // Crawl popolates the Sitemap map[string]Children
 func (sm *SiteMapManager) Crawl() {
-	i := 0
-	for len(sm.urlQueue) > 0 {
-		url := sm.urlQueue[0]
-		links, _ := sm.crawler.Crawl(url, sm.rootDomain)
-
-		k := 0
-		for _, link := range links {
-			if _, ok := sm.Sitemap[link]; !ok {
-				sm.Sitemap[url] = append(sm.Sitemap[url], link)
-				sm.Sitemap[link] = Children{}
-				sm.urlQueue = append(sm.urlQueue, link)
-				k++
-			}
-			if sm.linksPerPage > 0 && k >= sm.linksPerPage {
-				break
-			}
-		}
-
-		sm.urlQueue = sm.urlQueue[1:]
-		i++
-		if sm.pageLimit != 0 && i >= sm.pageLimit {
-			break
-		}
+	var err error
+	sm.Sitemap, err = sm.crawler.Crawl(sm.rootDomain, sm.pageLimit, sm.linksPerPage)
+	if err != nil {
+		log.Printf("sitemap: error: %s", err)
 	}
 }
 
