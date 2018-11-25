@@ -1,12 +1,12 @@
 package concurrent
 
 import (
-	"fmt"
 	"strings"
 	"time"
 
 	"github.com/nikhil-thomas/web-crawler/internal/crawlers"
 	"github.com/nikhil-thomas/web-crawler/internal/sitemap"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
@@ -31,9 +31,9 @@ func filterDomains(links []string, rootDomain string) []string {
 	for _, link := range links {
 		if strings.HasPrefix(link, rootDomain) {
 			filteredLinks = append(filteredLinks, link)
-			fmt.Println("add  :", link)
+			log.Info("add  : ", link)
 		} else {
-			fmt.Println("skip :", link)
+			log.Info("skip : ", link)
 		}
 	}
 	return filteredLinks
@@ -90,11 +90,11 @@ func launchWorkers(inChan chan Page, outChan chan Page, workerCount int, fetcher
 func extractWorker(inChan chan Page, outChan chan Page, id int, fetcher crawlers.URLFetcher, rootURL string) {
 	go func() {
 		for page := range inChan {
-			fmt.Println("worker :", id, "url :", page.url)
+			log.Debug("worker :", id, "url : ", page.url)
 			links, err := fetcher.ExtractURLs(page.url)
 			if err != nil {
 				if err != nil {
-					fmt.Printf("error: crawler: %s\n", err)
+					log.Error("crawler : ", err)
 				}
 			}
 
@@ -102,7 +102,7 @@ func extractWorker(inChan chan Page, outChan chan Page, id int, fetcher crawlers
 
 			outChan <- page
 		}
-		fmt.Println("worker exited:", id)
+		log.Debug("worker exited : ", id)
 	}()
 }
 
@@ -119,7 +119,6 @@ func makeSiteMap(done chan bool, inChan chan Page, supplyChan chan string, stmp 
 				break forLoop
 			case page := <-inChan:
 				k := 0
-				fmt.Print("links: ", i)
 				for _, link := range page.children {
 					if _, ok := stmp[link]; !ok {
 						stmp[page.url] = append(stmp[page.url], link)
@@ -134,7 +133,7 @@ func makeSiteMap(done chan bool, inChan chan Page, supplyChan chan string, stmp 
 						break
 					}
 				}
-				fmt.Print(" : supply: ", len(supplyChan), "\n")
+				log.Info("links processed : ", i, " : links in queue : ", len(supplyChan))
 				if len(supplyChan) == 0 {
 					go endOperationTimeout(done, supplyChan)
 				}
@@ -150,10 +149,10 @@ func makeSiteMap(done chan bool, inChan chan Page, supplyChan chan string, stmp 
 }
 
 func endOperationTimeout(done chan bool, checkChan chan string) {
-	fmt.Println("supplyChan timout start")
+	log.Info("queue empty : start crawiling stop timeout")
 	time.Sleep(10 * time.Second)
 	if len(checkChan) == 0 {
-		fmt.Println("supplyChan timout confirm")
+		log.Info("queue empty : stop crawiling")
 		close(done)
 	}
 }

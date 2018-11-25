@@ -2,7 +2,8 @@ package sitemap
 
 import (
 	"fmt"
-	"log"
+
+	log "github.com/sirupsen/logrus"
 )
 
 // Crawler interface defines the behavior of a Crawler
@@ -38,13 +39,13 @@ func (sm *SiteMapManager) Crawl() {
 	var err error
 	sm.Sitemap, err = sm.crawler.Crawl(sm.rootDomain)
 	if err != nil {
-		log.Printf("sitemap: error: %s", err)
+		log.Error("sitemap : ", err)
 	}
 }
 
 // PrintMap prints site map as a tree
 func (sm *SiteMapManager) PrintMap() {
-	fmt.Printf("\n::::: Site Map: %s ::::\n", sm.rootDomain)
+	fmt.Printf("\n::::: Site Map: %s ::::\n\n", sm.rootDomain)
 
 	sm.printTree(sm.rootDomain, 0)
 }

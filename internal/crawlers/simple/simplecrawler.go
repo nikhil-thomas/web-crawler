@@ -6,6 +6,7 @@ import (
 
 	"github.com/nikhil-thomas/web-crawler/internal/crawlers"
 	"github.com/nikhil-thomas/web-crawler/internal/sitemap"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
@@ -24,9 +25,9 @@ func filterDomains(links []string, rootDomain string) []string {
 	for _, link := range links {
 		if strings.HasPrefix(link, rootDomain) {
 			filteredLinks = append(filteredLinks, link)
-			fmt.Println("add  :", link)
+			log.Info("add  : ", link)
 		} else {
-			fmt.Println("skip :", link)
+			log.Info("skip : ", link)
 		}
 	}
 	return filteredLinks
@@ -47,7 +48,7 @@ func (cm *CrawlManager) Crawl(rootURL string) (map[string]sitemap.Children, erro
 				if err != crawlers.ErrPageNotHTML {
 					return nil, fmt.Errorf("crawl manager: %s", err)
 				}
-				fmt.Printf("error: crawler: %s\n", err)
+				log.Error("crawler : ", err)
 			}
 		}
 
@@ -68,6 +69,7 @@ func (cm *CrawlManager) Crawl(rootURL string) (map[string]sitemap.Children, erro
 
 		urls = urls[1:]
 		i++
+		log.Info("links processed : ", i, " : links in queue : ", len(urls))
 		if pageLimit != 0 && i >= pageLimit {
 			break
 		}
