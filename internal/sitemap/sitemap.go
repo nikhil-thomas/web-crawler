@@ -31,8 +31,8 @@ func NewSiteManager(url string, depth int, crawler Crawler) *SiteMapManager {
 		Sitemap:      map[string]Children{},
 		urlQueue:     []string{url},
 		crawler:      crawler,
-		pageLimit:    50,
-		linksPerPage: 2,
+		pageLimit:    100,
+		linksPerPage: 4,
 	}
 }
 
@@ -49,6 +49,7 @@ func (sm *SiteMapManager) Crawl() {
 // PrintMap prints site map as a tree
 func (sm *SiteMapManager) PrintMap() {
 	fmt.Printf("\n::::: Site Map: %s ::::\n", sm.rootDomain)
+
 	sm.printTree(sm.rootDomain, 0)
 }
 
