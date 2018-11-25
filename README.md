@@ -9,12 +9,12 @@ An application to generate site map od a given domain
 ### Simple Usage
 
  ```
-    docker run --rm nikhilvep/webcrawl:0.1
+    docker run --rm nikhilvep/webcrawl
  ```
 #### Options
 ![alt text](/screenshots/web-crawler-options.png "commandline flags")
  ```
-    docker run --rm nikhilvep/webcrawl:0.1 https://github.com
+    docker run --rm nikhilvep/webcrawl https://github.com
  ```
 #### Sample Output
 ![alt text](/screenshots/web-crawler-sample-output.png "sample sitemap")
