@@ -2,6 +2,8 @@ package sitemap
 
 import (
 	"fmt"
+	"io"
+	"os"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -24,7 +26,7 @@ type SiteMapManager struct {
 }
 
 // NewSiteManager creates and returns a SiteMapManager
-func NewSiteManager(url string, depth int, crawler Crawler) *SiteMapManager {
+func NewSiteManager(url string, crawler Crawler) *SiteMapManager {
 	return &SiteMapManager{
 		rootDomain: url,
 		Sitemap:    map[string]Children{},
@@ -45,15 +47,20 @@ func (sm *SiteMapManager) Crawl() {
 
 // PrintMap prints site map as a tree
 func (sm *SiteMapManager) PrintMap() {
-	fmt.Printf("\n::::: Site Map: %s ::::\n\n", sm.rootDomain)
-
-	sm.printTree(sm.rootDomain, 0)
+	sm.FPrintMap(os.Stdout)
 }
 
-func (sm *SiteMapManager) printTree(url string, depth int) {
+// FPrintMap writes site map as a tree to io.Writer
+func (sm *SiteMapManager) FPrintMap(w io.Writer) {
+	fmt.Fprintf(w, "\n::::: Site Map: %s ::::\n\n", sm.rootDomain)
 
-	fmt.Printf("%*s%s\n", depth, "", url)
+	sm.printTree(w, sm.rootDomain, 0)
+}
+
+func (sm *SiteMapManager) printTree(w io.Writer, url string, depth int) {
+
+	fmt.Fprintf(w, "%*s%s\n", depth, "", url)
 	for _, val := range sm.Sitemap[url] {
-		sm.printTree(val, depth+2)
+		sm.printTree(w, val, depth+2)
 	}
 }

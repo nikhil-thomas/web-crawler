@@ -21,7 +21,7 @@ func main() {
 	fetcher := http.NewFetcher()
 	crwlMng := simple.NewCrawlManager(fetcher)
 
-	siteMap := sitemap.NewSiteManager(urls[0], 100, crwlMng)
+	siteMap := sitemap.NewSiteManager(urls[0], crwlMng)
 
 	siteMap.Crawl()
 

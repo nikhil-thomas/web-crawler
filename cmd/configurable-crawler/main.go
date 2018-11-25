@@ -31,7 +31,7 @@ func main() {
 		crwlMng = simple.NewCrawlManager(fetcher)
 	}
 
-	siteMap := sitemap.NewSiteManager(url, 100, crwlMng)
+	siteMap := sitemap.NewSiteManager(url, crwlMng)
 	siteMap.Crawl()
 	siteMap.PrintMap()
 }
