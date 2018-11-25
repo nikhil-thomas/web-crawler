@@ -7,6 +7,7 @@ import (
 
 	"github.com/nikhil-thomas/web-crawler/internal/crawlers"
 	"github.com/nikhil-thomas/web-crawler/internal/sitemap"
+	"github.com/spf13/viper"
 )
 
 // CrawlManager implements sitemap.Crawler interface
@@ -39,26 +40,26 @@ func filterDomains(links []string, rootDomain string) []string {
 }
 
 // Crawl crawls a webpage and cretes sitemap
-func (cm *CrawlManager) Crawl(rootURL string, pageLimit, linksPerPage int) (map[string]sitemap.Children, error) {
+func (cm *CrawlManager) Crawl(rootURL string) (map[string]sitemap.Children, error) {
 	stmp := map[string]sitemap.Children{}
 
 	done := make(chan bool)
 
 	urlSUpplyChan := make(chan string, 500)
 
-	PageChan := enqueue(done, urlSUpplyChan, pageLimit, linksPerPage)
+	PageChan := enqueue(done, urlSUpplyChan)
 
 	linksChan := make(chan Page)
 
 	launchWorkers(PageChan, linksChan, 10, cm.fetcher, rootURL)
 
-	sitemapChan := makeSiteMap(done, linksChan, urlSUpplyChan, stmp, pageLimit, linksPerPage)
+	sitemapChan := makeSiteMap(done, linksChan, urlSUpplyChan, stmp)
 	urlSUpplyChan <- rootURL
 	stmpOut := <-sitemapChan
 	return stmpOut, nil
 }
 
-func enqueue(done chan bool, inChan chan string, pageLimit, linksPerPage int) chan Page {
+func enqueue(done chan bool, inChan chan string) chan Page {
 	outChan := make(chan Page)
 	go func() {
 	forLoop:
@@ -105,8 +106,10 @@ func extractWorker(inChan chan Page, outChan chan Page, id int, fetcher crawlers
 	}()
 }
 
-func makeSiteMap(done chan bool, inChan chan Page, supplyChan chan string, stmp map[string]sitemap.Children, pageLimit, linksPerPage int) chan map[string]sitemap.Children {
+func makeSiteMap(done chan bool, inChan chan Page, supplyChan chan string, stmp map[string]sitemap.Children) chan map[string]sitemap.Children {
 	outSiteMap := make(chan map[string]sitemap.Children)
+	linksPerPage := viper.GetInt("LINKS_PER_PAGE")
+	pageLimit := viper.GetInt("PAGE_LIMIT")
 	go func() {
 		i := 0
 	forLoop:

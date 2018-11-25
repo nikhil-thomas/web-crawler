@@ -6,6 +6,7 @@ import (
 
 	"github.com/nikhil-thomas/web-crawler/internal/crawlers"
 	"github.com/nikhil-thomas/web-crawler/internal/sitemap"
+	"github.com/spf13/viper"
 )
 
 // CrawlManager implements sitemap.Crawler interface
@@ -32,10 +33,12 @@ func filterDomains(links []string, rootDomain string) []string {
 }
 
 // Crawl crawls a webpage and cretes sitemap
-func (cm *CrawlManager) Crawl(rootURL string, pageLimit, linksPerPage int) (map[string]sitemap.Children, error) {
+func (cm *CrawlManager) Crawl(rootURL string) (map[string]sitemap.Children, error) {
 	stmp := map[string]sitemap.Children{}
 	i := 0
 	urls := []string{rootURL}
+	linksPerPage := viper.GetInt("LINKS_PER_PAGE")
+	pageLimit := viper.GetInt("PAGE_LIMIT")
 	for len(urls) > 0 {
 		url := urls[0]
 		links, err := cm.fetcher.ExtractURLs(url)

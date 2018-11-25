@@ -7,7 +7,7 @@ import (
 
 // Crawler interface defines the behavior of a Crawler
 type Crawler interface {
-	Crawl(url string, pageLimit, linksPerPage int) (map[string]Children, error)
+	Crawl(url string) (map[string]Children, error)
 }
 
 // Children defines a list of children links in a html page
@@ -16,23 +16,19 @@ type Children []string
 // SiteMapManager defines a sitemap generator
 // SiteMapManager can work on a link and generate its sitemap
 type SiteMapManager struct {
-	rootDomain   string
-	Sitemap      map[string]Children
-	urlQueue     []string
-	crawler      Crawler
-	pageLimit    int
-	linksPerPage int
+	rootDomain string
+	Sitemap    map[string]Children
+	urlQueue   []string
+	crawler    Crawler
 }
 
 // NewSiteManager creates and returns a SiteMapManager
 func NewSiteManager(url string, depth int, crawler Crawler) *SiteMapManager {
 	return &SiteMapManager{
-		rootDomain:   url,
-		Sitemap:      map[string]Children{},
-		urlQueue:     []string{url},
-		crawler:      crawler,
-		pageLimit:    100,
-		linksPerPage: 4,
+		rootDomain: url,
+		Sitemap:    map[string]Children{},
+		urlQueue:   []string{url},
+		crawler:    crawler,
 	}
 }
 
@@ -40,7 +36,7 @@ func NewSiteManager(url string, depth int, crawler Crawler) *SiteMapManager {
 // Crawl popolates the Sitemap map[string]Children
 func (sm *SiteMapManager) Crawl() {
 	var err error
-	sm.Sitemap, err = sm.crawler.Crawl(sm.rootDomain, sm.pageLimit, sm.linksPerPage)
+	sm.Sitemap, err = sm.crawler.Crawl(sm.rootDomain)
 	if err != nil {
 		log.Printf("sitemap: error: %s", err)
 	}
