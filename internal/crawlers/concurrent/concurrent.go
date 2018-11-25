@@ -82,10 +82,10 @@ func enqueue(done chan bool, inChan chan string) chan Page {
 }
 
 func launchWorkers(done chan bool, inChan chan Page, outChan chan Page, workerCount int, fetcher crawlers.URLFetcher, rootURL string) {
-	// numWorkers := viper.GetInt("WORKER_COUNT")
-	// if numWorkers == 0 {
-	numWorkers := 10
-	// }
+	numWorkers := viper.GetInt("WORKER_COUNT")
+	if numWorkers == 0 {
+		numWorkers = 10
+	}
 	for i := 0; i < numWorkers; i++ {
 		extractWorker(done, inChan, outChan, i+1, fetcher, rootURL)
 	}

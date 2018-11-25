@@ -39,6 +39,7 @@ func (cm *CrawlManager) Crawl(rootURL string) (map[string]sitemap.Children, erro
 	urls := []string{rootURL}
 	linksPerPage := viper.GetInt("LINKS_PER_PAGE")
 	pageLimit := viper.GetInt("PAGE_LIMIT")
+
 	for len(urls) > 0 {
 		url := urls[0]
 		links, err := cm.fetcher.ExtractURLs(url)

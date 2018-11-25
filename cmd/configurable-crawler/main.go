@@ -54,7 +54,7 @@ func parseFlags() string {
 
 	crawlerTimeout := flag.String(
 		"t",
-		"5s",
+		"10s",
 		"timeout to stop concurrent crawler when no new links are available [eg: 1s,1ns,1ms,1µs]")
 
 	logLevel := flag.Int(
