@@ -31,9 +31,9 @@ func filterDomains(links []string, rootDomain string) []string {
 	for _, link := range links {
 		if strings.HasPrefix(link, rootDomain) {
 			filteredLinks = append(filteredLinks, link)
-			log.Info("add  : ", link)
+			log.Info("add   : ", link)
 		} else {
-			log.Info("skip : ", link)
+			log.Info("skip  : ", link)
 		}
 	}
 	return filteredLinks
@@ -94,7 +94,7 @@ func extractWorker(inChan chan Page, outChan chan Page, id int, fetcher crawlers
 			links, err := fetcher.ExtractURLs(page.url)
 			if err != nil {
 				if err != nil {
-					log.Error("crawler : ", err)
+					log.Error("crawl : ", err, page.url)
 				}
 			}
 
@@ -133,7 +133,7 @@ func makeSiteMap(done chan bool, inChan chan Page, supplyChan chan string, stmp 
 						break
 					}
 				}
-				log.Info("links processed : ", i, " : links in queue : ", len(supplyChan))
+				log.Info("links : ", i, " : queue : ", len(supplyChan))
 				if len(supplyChan) == 0 {
 					go endOperationTimeout(done, supplyChan)
 				}
@@ -149,8 +149,9 @@ func makeSiteMap(done chan bool, inChan chan Page, supplyChan chan string, stmp 
 }
 
 func endOperationTimeout(done chan bool, checkChan chan string) {
-	log.Info("queue empty : start crawiling stop timeout")
-	time.Sleep(10 * time.Second)
+	timeout := viper.GetDuration("CRAWLER_TIMEOUT")
+	log.Info("queue empty : start crawiling stop timeout : ", timeout)
+	time.Sleep(timeout)
 	if len(checkChan) == 0 {
 		log.Info("queue empty : stop crawiling")
 		close(done)

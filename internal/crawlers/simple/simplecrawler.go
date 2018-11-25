@@ -25,9 +25,9 @@ func filterDomains(links []string, rootDomain string) []string {
 	for _, link := range links {
 		if strings.HasPrefix(link, rootDomain) {
 			filteredLinks = append(filteredLinks, link)
-			log.Info("add  : ", link)
+			log.Info("add   : ", link)
 		} else {
-			log.Info("skip : ", link)
+			log.Info("skip  : ", link)
 		}
 	}
 	return filteredLinks
@@ -48,7 +48,7 @@ func (cm *CrawlManager) Crawl(rootURL string) (map[string]sitemap.Children, erro
 				if err != crawlers.ErrPageNotHTML {
 					return nil, fmt.Errorf("crawl manager: %s", err)
 				}
-				log.Error("crawler : ", err)
+				log.Error("crawl : ", err, url)
 			}
 		}
 
@@ -69,7 +69,7 @@ func (cm *CrawlManager) Crawl(rootURL string) (map[string]sitemap.Children, erro
 
 		urls = urls[1:]
 		i++
-		log.Info("links processed : ", i, " : links in queue : ", len(urls))
+		log.Info("links : ", i, " : queue : ", len(urls))
 		if pageLimit != 0 && i >= pageLimit {
 			break
 		}
