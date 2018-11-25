@@ -31,9 +31,9 @@ func filterDomains(links []string, rootDomain string) []string {
 	for _, link := range links {
 		if strings.HasPrefix(link, rootDomain) {
 			filteredLinks = append(filteredLinks, link)
-			log.Info("add   : ", link)
+			log.Info("add    : ", link)
 		} else {
-			log.Info("skip  : ", link)
+			log.Info("skip   : ", link)
 		}
 	}
 	return filteredLinks
@@ -45,13 +45,14 @@ func (cm *CrawlManager) Crawl(rootURL string) (map[string]sitemap.Children, erro
 
 	done := make(chan bool)
 
-	urlSUpplyChan := make(chan string, 500)
+	queueLength := viper.GetInt("CRAWLER_QUEUE_LENGTH")
+	urlSUpplyChan := make(chan string, queueLength)
 
 	PageChan := enqueue(done, urlSUpplyChan)
 
 	linksChan := make(chan Page)
 
-	launchWorkers(PageChan, linksChan, 10, cm.fetcher, rootURL)
+	launchWorkers(done, PageChan, linksChan, 10, cm.fetcher, rootURL)
 
 	sitemapChan := makeSiteMap(done, linksChan, urlSUpplyChan, stmp)
 	urlSUpplyChan <- rootURL
@@ -80,29 +81,39 @@ func enqueue(done chan bool, inChan chan string) chan Page {
 	return outChan
 }
 
-func launchWorkers(inChan chan Page, outChan chan Page, workerCount int, fetcher crawlers.URLFetcher, rootURL string) {
-	for i := 0; i < workerCount; i++ {
-		extractWorker(inChan, outChan, i+1, fetcher, rootURL)
+func launchWorkers(done chan bool, inChan chan Page, outChan chan Page, workerCount int, fetcher crawlers.URLFetcher, rootURL string) {
+	// numWorkers := viper.GetInt("WORKER_COUNT")
+	// if numWorkers == 0 {
+	numWorkers := 10
+	// }
+	for i := 0; i < numWorkers; i++ {
+		extractWorker(done, inChan, outChan, i+1, fetcher, rootURL)
 	}
 }
 
 // func extractWorker(inChan chan Page, outChan chan Page, fetcher crawlers.URLFetcher, rootURL string) chan Page {
-func extractWorker(inChan chan Page, outChan chan Page, id int, fetcher crawlers.URLFetcher, rootURL string) {
+func extractWorker(done chan bool, inChan, outChan chan Page, id int, fetcher crawlers.URLFetcher, rootURL string) {
 	go func() {
-		for page := range inChan {
-			log.Debug("worker :", id, "url : ", page.url)
-			links, err := fetcher.ExtractURLs(page.url)
-			if err != nil {
+	forLoop:
+		for {
+			select {
+			case <-done:
+				break forLoop
+			case page := <-inChan:
+				log.Debug("worker : ", id, " : url : ", page.url)
+				links, err := fetcher.ExtractURLs(page.url)
 				if err != nil {
-					log.Error("crawl : ", err, page.url)
+					if err != nil {
+						log.Error("crawl  : ", err, page.url)
+					}
 				}
+
+				page.children = filterDomains(links, rootURL)
+
+				outChan <- page
 			}
-
-			page.children = filterDomains(links, rootURL)
-
-			outChan <- page
 		}
-		log.Debug("worker exited : ", id)
+		log.Debug("worker : exited : ", id)
 	}()
 }
 
@@ -110,6 +121,7 @@ func makeSiteMap(done chan bool, inChan chan Page, supplyChan chan string, stmp 
 	outSiteMap := make(chan map[string]sitemap.Children)
 	linksPerPage := viper.GetInt("LINKS_PER_PAGE")
 	pageLimit := viper.GetInt("PAGE_LIMIT")
+
 	go func() {
 		i := 0
 	forLoop:
@@ -133,12 +145,13 @@ func makeSiteMap(done chan bool, inChan chan Page, supplyChan chan string, stmp 
 						break
 					}
 				}
-				log.Info("links : ", i, " : queue : ", len(supplyChan))
+				log.Info("links  : ", i, " : queue : ", len(supplyChan))
 				if len(supplyChan) == 0 {
 					go endOperationTimeout(done, supplyChan)
 				}
 				i++
 				if pageLimit != 0 && i >= pageLimit {
+					close(done)
 					break forLoop
 				}
 			}
@@ -150,10 +163,10 @@ func makeSiteMap(done chan bool, inChan chan Page, supplyChan chan string, stmp 
 
 func endOperationTimeout(done chan bool, checkChan chan string) {
 	timeout := viper.GetDuration("CRAWLER_TIMEOUT")
-	log.Info("queue empty : start crawiling stop timeout : ", timeout)
+	log.Info("queue  : empty : start crawiling stop timeout : ", timeout)
 	time.Sleep(timeout)
 	if len(checkChan) == 0 {
-		log.Info("queue empty : stop crawiling")
+		log.Info("queue  : empty : stop crawiling")
 		close(done)
 	}
 }

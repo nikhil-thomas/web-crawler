@@ -19,7 +19,7 @@ func main() {
 
 	url := parseFlags()
 
-	log.Info("root url : ", url)
+	log.Info("root   : ", url)
 
 	fetcher := http.NewFetcher()
 
@@ -37,11 +37,40 @@ func main() {
 }
 
 func parseFlags() string {
-	disableConcurrency := flag.Bool("con-off", false, "set false to turn off concurrency")
-	pageLimit := flag.Int("p", 50, "maximum number of pages to be crawled (set 0 for no limit)")
-	linksPerPage := flag.Int("l", 5, "maximum number of links to be extracted per page to be crawled (set 0 for no limit)")
-	crawlerTimeout := flag.String("t", "5s", "timeout to stop concurrent crawler when no new links are available [eg: 1s,1ns,1ms,1µs]")
-	logLevel := flag.Int("log", 4, "log level [0-panic, 1-fatal, 2-error, 3-warn, 4-info, 5-debug")
+	disableConcurrency := flag.Bool(
+		"con-off",
+		false,
+		"set false to turn off concurrency")
+
+	pageLimit := flag.Int(
+		"p",
+		50,
+		"maximum number of pages to be crawled (set 0 for no limit)")
+
+	linksPerPage := flag.Int(
+		"l",
+		5,
+		"maximum number of links to be extracted per page to be crawled (set 0 for no limit)")
+
+	crawlerTimeout := flag.String(
+		"t",
+		"5s",
+		"timeout to stop concurrent crawler when no new links are available [eg: 1s,1ns,1ms,1µs]")
+
+	logLevel := flag.Int(
+		"log",
+		4,
+		"log level [0-panic, 1-fatal, 2-error, 3-warn, 4-info, 5-debug")
+
+	queueLength := flag.Int(
+		"q",
+		500,
+		"length of crawler process queue")
+
+	numWorkers := flag.Int(
+		"w",
+		10,
+		"number of workers(goroutines) in concurrent crawling")
 
 	flag.Parse()
 
@@ -49,8 +78,9 @@ func parseFlags() string {
 	viper.Set("PAGE_LIMIT", *pageLimit)
 	viper.Set("LINKS_PER_PAGE", *linksPerPage)
 	viper.Set("CRAWLER_TIMEOUT", *crawlerTimeout)
+	viper.Set("WORKER_COUNT", *numWorkers)
+	viper.Set("CRAWLER_QUEUE_LENGTH", *queueLength)
 
-	//log.SetFormatter(&log.JSONFormatter{})
 	log.SetLevel(log.Level(*logLevel))
 
 	args := flag.Args()
