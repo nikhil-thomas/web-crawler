@@ -31,7 +31,6 @@ func filterDomains(links []string, rootDomain string) []string {
 	for _, link := range links {
 		if strings.HasPrefix(link, rootDomain) {
 			filteredLinks = append(filteredLinks, link)
-			log.Info("add    : ", link)
 		} else {
 			log.Info("skip   : ", link)
 		}
@@ -134,6 +133,7 @@ func makeSiteMap(done chan bool, inChan chan Page, supplyChan chan string, stmp 
 				for _, link := range page.children {
 					if _, ok := stmp[link]; !ok {
 						stmp[page.url] = append(stmp[page.url], link)
+						log.Info("add    : ", link)
 						stmp[link] = sitemap.Children{}
 						go func(l string) {
 							supplyChan <- l

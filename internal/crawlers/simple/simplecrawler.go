@@ -25,7 +25,6 @@ func filterDomains(links []string, rootDomain string) []string {
 	for _, link := range links {
 		if strings.HasPrefix(link, rootDomain) {
 			filteredLinks = append(filteredLinks, link)
-			log.Info("add   : ", link)
 		} else {
 			log.Info("skip  : ", link)
 		}
@@ -58,6 +57,7 @@ func (cm *CrawlManager) Crawl(rootURL string) (map[string]sitemap.Children, erro
 		for _, link := range children {
 			if _, ok := stmp[link]; !ok {
 				stmp[url] = append(stmp[url], link)
+				log.Info("add    : ", link)
 				stmp[link] = sitemap.Children{}
 				urls = append(urls, link)
 				k++
