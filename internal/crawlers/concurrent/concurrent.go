@@ -55,6 +55,7 @@ func (cm *CrawlManager) Crawl(rootURL string) (map[string]sitemap.Children, erro
 
 	sitemapChan := makeSiteMap(done, linksChan, urlSUpplyChan, stmp)
 	urlSUpplyChan <- rootURL
+
 	stmpOut := <-sitemapChan
 	return stmpOut, nil
 }
@@ -103,7 +104,7 @@ func extractWorker(done chan bool, inChan, outChan chan Page, id int, fetcher cr
 				links, err := fetcher.ExtractURLs(page.url)
 				if err != nil {
 					if err != nil {
-						log.Error("crawl  : ", err, page.url)
+						log.Error("crawl : ", err, page.url)
 					}
 				}
 
@@ -121,12 +122,16 @@ func makeSiteMap(done chan bool, inChan chan Page, supplyChan chan string, stmp 
 	linksPerPage := viper.GetInt("LINKS_PER_PAGE")
 	pageLimit := viper.GetInt("PAGE_LIMIT")
 
+	queueEmptyTimeoutEvent := make(chan bool)
+
 	go func() {
 		i := 0
 	forLoop:
 		for {
 			select {
 			case <-done:
+				break forLoop
+			case <-queueEmptyTimeoutEvent:
 				break forLoop
 			case page := <-inChan:
 				k := 0
@@ -145,28 +150,29 @@ func makeSiteMap(done chan bool, inChan chan Page, supplyChan chan string, stmp 
 						break
 					}
 				}
-				log.Info("links  : ", i, " : queue : ", len(supplyChan))
-				if len(supplyChan) == 0 {
-					go endOperationTimeout(done, supplyChan)
-				}
 				i++
+				log.Info("links  : ", i, " : queue : ", len(supplyChan))
 				if pageLimit != 0 && i >= pageLimit {
-					close(done)
+					log.Info("crawl  : page limit (", pageLimit, ") reached : stop crawiling")
 					break forLoop
+				}
+				if len(supplyChan) == 0 {
+					go endOperationTimeout(queueEmptyTimeoutEvent, supplyChan)
 				}
 			}
 		}
+		close(done)
 		outSiteMap <- stmp
 	}()
 	return outSiteMap
 }
 
-func endOperationTimeout(done chan bool, checkChan chan string) {
+func endOperationTimeout(queueEmptyChan chan bool, checkChan chan string) {
 	timeout := viper.GetDuration("CRAWLER_TIMEOUT")
 	log.Info("queue  : empty : start crawiling stop timeout : ", timeout)
 	time.Sleep(timeout)
 	if len(checkChan) == 0 {
 		log.Info("queue  : empty : stop crawiling")
-		close(done)
+		close(queueEmptyChan)
 	}
 }

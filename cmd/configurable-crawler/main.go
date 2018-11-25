@@ -44,12 +44,12 @@ func parseFlags() string {
 
 	pageLimit := flag.Int(
 		"p",
-		50,
+		250,
 		"maximum number of pages to be crawled (set 0 for no limit)")
 
 	linksPerPage := flag.Int(
 		"l",
-		5,
+		100,
 		"maximum number of links to be extracted per page to be crawled (set 0 for no limit)")
 
 	crawlerTimeout := flag.String(
