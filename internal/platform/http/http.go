@@ -22,7 +22,7 @@ func NewFetcher() *Fetcher {
 func (f *Fetcher) ExtractURLs(url string) ([]string, error) {
 	resp, err := http.Get(url)
 	if err != nil {
-		return nil, fmt.Errorf("http fetcher: %s", err)
+		return nil, fmt.Errorf("http fetcher: url : %s : err : %v", url, err)
 	}
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("http fetcher: http.Get status code: %d", resp.StatusCode)
