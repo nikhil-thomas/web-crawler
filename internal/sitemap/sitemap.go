@@ -6,6 +6,7 @@ import (
 	"os"
 
 	log "github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 )
 
 // Crawler interface defines the behavior of a Crawler
@@ -52,15 +53,20 @@ func (sm *SiteMapManager) PrintMap() {
 
 // FPrintMap writes site map as a tree to io.Writer
 func (sm *SiteMapManager) FPrintMap(w io.Writer) {
-	fmt.Fprintf(w, "\n::::: Site Map: %s ::::\n\n", sm.rootDomain)
-
-	sm.printTree(w, sm.rootDomain, 0)
+	fmt.Fprintf(w, "\n::::: Site Map: %s ::::\n", sm.rootDomain)
+	trim := viper.GetBool("TRIM_ROOT")
+	sm.printTree(w, sm.rootDomain, 0, trim)
 }
 
-func (sm *SiteMapManager) printTree(w io.Writer, url string, depth int) {
+func (sm *SiteMapManager) printTree(w io.Writer, url string, depth int, trim bool) {
 
-	fmt.Fprintf(w, "%*s%s\n", depth, "", url)
+	skipLen := 0
+	if trim {
+		skipLen = len(sm.rootDomain)
+	}
+	fmt.Fprintf(w, "%*s%s\n", depth, "", url[skipLen:])
+
 	for _, val := range sm.Sitemap[url] {
-		sm.printTree(w, val, depth+2)
+		sm.printTree(w, val, depth+2, trim)
 	}
 }

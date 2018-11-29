@@ -72,6 +72,10 @@ func parseFlags() string {
 		10,
 		"number of workers(goroutines) in concurrent crawling")
 
+	trimRoot := flag.Bool(
+		"trim",
+		false,
+		"trim root domain name from sitemap")
 	flag.Parse()
 
 	viper.Set("DISABLE_CONCURRENCY", *disableConcurrency)
@@ -80,6 +84,7 @@ func parseFlags() string {
 	viper.Set("CRAWLER_TIMEOUT", *crawlerTimeout)
 	viper.Set("WORKER_COUNT", *numWorkers)
 	viper.Set("CRAWLER_QUEUE_LENGTH", *queueLength)
+	viper.Set("TRIM_ROOT", *trimRoot)
 
 	log.SetLevel(log.Level(*logLevel))
 

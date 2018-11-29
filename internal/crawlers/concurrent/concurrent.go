@@ -144,12 +144,15 @@ func (cm *CrawlManager) extractWorker(inChan chan Page, id int, rootURL string) 
 			case <-cm.done:
 				break forLoop
 			case page := <-inChan:
-				log.Debug("worker : ", id, " : url : ", page.url)
-				links, err := cm.fetcher.ExtractURLs(page.url)
-				if err != nil {
-					log.Error("crawl : ", err, page.url)
+				if page.url != "" {
+					log.Debug("worker : ", id, " : url : ", page.url)
+					links, err := cm.fetcher.ExtractURLs(page.url)
+					if err != nil {
+						log.Error("crawl : ", err, page.url)
+					} else {
+						page.children = filterDomains(links, rootURL)
+					}
 				}
-				page.children = filterDomains(links, rootURL)
 
 				outChan <- page
 			}
