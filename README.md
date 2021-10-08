@@ -1,5 +1,5 @@
 # Web Crawler
-An application to generate site map od a given domain
+An application to generate site map of a given domain
 
 ## Design
 ![alt text](/screenshots/web-crawler-design.png "web crawler design")
